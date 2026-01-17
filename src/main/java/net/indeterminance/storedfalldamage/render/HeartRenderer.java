@@ -20,7 +20,7 @@ import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 
 public class HeartRenderer {
 
-    private static final ResourceLocation CRACKED_HEARTS_LOC = new ResourceLocation(StoredFallDamage.MOD_ID, "textures/gui/cracked_hearts.png");
+    private static final ResourceLocation CRACKED_HEARTS_LOC = ResourceLocation.fromNamespaceAndPath(StoredFallDamage.MOD_ID, "textures/gui/cracked_hearts.png");
     private static final int CRACKED_HEARTS_VARIANTS = 6;
 
     public static Minecraft instance;
@@ -69,7 +69,7 @@ public class HeartRenderer {
         int healthRows = Mth.ceil((healthMax + absorb) / 2.0F / 10.0F);
         int rowHeight = Math.max(10 - (healthRows - 2), 3);
 
-        gui.random.setSeed((long) (gui.tickCount * 312871));
+        gui.random.setSeed(gui.tickCount * 312871L);
 
         int left = gui.screenWidth / 2 - 91;
         int top = gui.screenHeight - gui.leftHeight;
@@ -159,17 +159,17 @@ public class HeartRenderer {
         if (health < gui.lastHealth && player.invulnerableTime > 0)
         {
             gui.lastHealthTime = Util.getMillis();
-            gui.healthBlinkTime = (long) (gui.tickCount + 20);
+            gui.healthBlinkTime = gui.tickCount + 20L;
         }
         else if (health > gui.lastHealth && player.invulnerableTime > 0)
         {
             gui.lastHealthTime = Util.getMillis();
-            gui.healthBlinkTime = (long) (gui.tickCount + 10);
+            gui.healthBlinkTime = gui.tickCount + 10L;
         }
         else if (FallBreakClientData.clientStoredFallDamage < lastStoredDamage)
         {
             gui.lastHealthTime = Util.getMillis();
-            gui.healthBlinkTime = (long) (gui.tickCount + 10);
+            gui.healthBlinkTime = gui.tickCount + 10L;
             fallFlashing = true;
         }
         else if (FallBreakClientData.clientStoredFallDamage == 0) {

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FallBreakProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
-    public static Capability<FallBreak> fallBreakCapability = CapabilityManager.get(new CapabilityToken<FallBreak>() {});
+    public static Capability<FallBreak> fallBreakCapability = CapabilityManager.get(new CapabilityToken<>() {});
     private FallBreak breaker = null;
     private final LazyOptional<FallBreak> optional = LazyOptional.of(this::createFallBreaker);
 

@@ -23,9 +23,7 @@ public class FallBreakPacketS2C {
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context ctx = supplier.get();
-        ctx.enqueueWork(() -> {
-            FallBreakClientData.clientStoredFallDamage = storedFallDamage;
-        });
+        ctx.enqueueWork(() -> FallBreakClientData.clientStoredFallDamage = storedFallDamage);
         return true;
     }
 }

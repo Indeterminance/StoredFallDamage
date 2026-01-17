@@ -28,12 +28,14 @@ public class PacketHandler {
         INSTANCE.messageBuilder(FallBreakPacketS2C.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(FallBreakPacketS2C::new)
                 .encoder(FallBreakPacketS2C::toBytes)
-                .consumerMainThread(FallBreakPacketS2C::handle).add();;
+                .consumerMainThread(FallBreakPacketS2C::handle).add();
     }
 
+    /*
     public static <V> void sendToServer(V msg) {
         INSTANCE.sendToServer(msg);
     }
+    */
 
     public static <V> void sendToClient(V msg, ServerPlayer player) {
         INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), msg);

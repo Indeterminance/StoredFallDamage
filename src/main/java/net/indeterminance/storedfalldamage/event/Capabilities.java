@@ -23,7 +23,7 @@ public class Capabilities {
         Entity entity = event.getObject();
         if (entity instanceof Player) {
             if (entity.getCapability(FallBreakProvider.fallBreakCapability).isPresent()) return;
-            event.addCapability(new ResourceLocation(StoredFallDamage.MOD_ID, "properties"), new FallBreakProvider());
+            event.addCapability(ResourceLocation.fromNamespaceAndPath(StoredFallDamage.MOD_ID, "properties"), new FallBreakProvider());
         }
     }
 
