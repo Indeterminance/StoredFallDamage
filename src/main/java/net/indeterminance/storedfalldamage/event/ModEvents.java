@@ -1,22 +1,17 @@
 package net.indeterminance.storedfalldamage.event;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.indeterminance.storedfalldamage.StoredFallDamage;
 import net.indeterminance.storedfalldamage.capability.FallBreak;
 import net.indeterminance.storedfalldamage.capability.FallBreakProvider;
-import net.indeterminance.storedfalldamage.client.FallBreakClientData;
 import net.indeterminance.storedfalldamage.config.ConfigEnforcer;
 import net.indeterminance.storedfalldamage.config.StoredDamageConfig;
 import net.indeterminance.storedfalldamage.networking.PacketHandler;
 import net.indeterminance.storedfalldamage.networking.packet.FallBreakPacketS2C;
 import net.indeterminance.storedfalldamage.render.HeartRenderer;
-import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;

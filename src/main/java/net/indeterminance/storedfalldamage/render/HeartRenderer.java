@@ -9,6 +9,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -71,7 +72,8 @@ public class HeartRenderer {
         gui.random.setSeed((long) (gui.tickCount * 312871));
 
         int left = gui.screenWidth / 2 - 91;
-        int top = gui.screenHeight - gui.leftHeight - (player.hasEffect(MobEffects.REGENERATION) ? 2 : 0);
+        int top = gui.screenHeight - gui.leftHeight;
+
         gui.leftHeight += (healthRows * rowHeight);
         if (rowHeight != 10) gui.leftHeight += 10 - rowHeight;
 
@@ -90,13 +92,22 @@ public class HeartRenderer {
 
         float fallDamageToHeal = FallBreakClientData.clientStoredFallDamage + currentAbsorption;
 
+        // Setup values for regen shake
+        boolean isRegenHeartRaised = gui.tickCount % 10 < 5 && player.hasEffect(MobEffects.REGENERATION);
+        MobEffectInstance regenEffect = player.getEffect(MobEffects.REGENERATION);
+        int regenLevel =  regenEffect == null ? 0 : regenEffect.getAmplifier() + 1;
+
         for(int thisHeartIndex = heartCount + absorbHeartCount - 1; thisHeartIndex >= 0; --thisHeartIndex) {
             int textureYOffset = thisHeartIndex >= heartCount ? 0 : 9 * (int) Math.min(CRACKED_HEARTS_VARIANTS,Math.ceil(fallDamageToHeal / 20)) + hardcoreOffset;
             fallDamageToHeal -= 2;
+
+            boolean thisHeartShake = (gui.tickCount / heartCount) % (10 / regenLevel) == thisHeartIndex % (heartCount / regenLevel);
+            boolean isShake = isRegenHeartRaised && thisHeartShake;
+
             int thisHeartRowIndex = thisHeartIndex / 10;
             int thisHeartRowPosition = thisHeartIndex % 10;
             int thisHeartPosX = x + thisHeartRowPosition * 8;
-            int thisHeartPosY = y - thisHeartRowIndex * height;
+            int thisHeartPosY = y - thisHeartRowIndex * height - (isShake ? 1 : 0);
             int thisHalfHeartCount = thisHeartIndex * 2;
 
             // Last heart
