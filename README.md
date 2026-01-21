@@ -15,3 +15,5 @@ Of course, this mod has a few config options to make things a little easier (or 
 `scaling` - Maybe you think stored damage should be easier to heal, or maybe you want to punish yourself and make it extra hard to recover? You can scale any damage stored, if you're not happy with a 1:1 store! The default is no scaling.
 
 `limit` - Perhaps you think dropping from orbit is fun, or maybe you think stored damage should only save you from minor mistakes! Raise or lower the limit of stored damage as you like! The default limit is 120 stored damage, equal to falling 143 blocks from full health.
+
+Should be fairly compatible with other mods that render custom heart overlays (for example, Mantle's signature colored hearts), as Stored Fall Damage only attempts to render when you're actually storing damage and lets other mods do the work otherwise. Yay for compatibility!
