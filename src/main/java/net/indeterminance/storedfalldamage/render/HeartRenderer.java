@@ -93,9 +93,9 @@ public class HeartRenderer {
         float fallDamageToHeal = FallBreakClientData.clientStoredFallDamage + currentAbsorption;
 
         // Setup values for regen shake
-        boolean isRegenHeartRaised = gui.tickCount % 10 < 5 && player.hasEffect(MobEffects.REGENERATION);
         MobEffectInstance regenEffect = player.getEffect(MobEffects.REGENERATION);
-        int regenLevel =  regenEffect == null ? 0 : regenEffect.getAmplifier() + 1;
+        boolean isRegenHeartRaised = gui.tickCount % 10 < 5 && regenEffect != null;
+        int regenLevel =  regenEffect == null ? 1 : regenEffect.getAmplifier() + 1;
 
         for(int thisHeartIndex = heartCount + absorbHeartCount - 1; thisHeartIndex >= 0; --thisHeartIndex) {
             int textureYOffset = thisHeartIndex >= heartCount ? 0 : 9 * (int) Math.min(CRACKED_HEARTS_VARIANTS,Math.ceil(fallDamageToHeal / 20)) + hardcoreOffset;

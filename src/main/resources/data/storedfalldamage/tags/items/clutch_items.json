@@ -6,6 +6,9 @@
     "minecraft:ladder",
     "minecraft:vine",
     "minecraft:scaffolding",
-    "minecraft:cobweb"
+    "minecraft:cobweb",
+    "#minecraft:beds",
+    "minecraft:hay_block",
+    "minecraft:honey_block"
   ]
 }

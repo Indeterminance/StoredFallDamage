@@ -13,8 +13,8 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -33,7 +33,7 @@ public class ModEvents {
         match the requirements set in configuration.
      */
     @SubscribeEvent
-    public static void onLivingHurt(LivingHurtEvent event) {
+    public static void onLivingDamage(LivingDamageEvent event) {
         if (!(event.getEntity() instanceof Player player) || !event.getSource().is(DamageTypes.FALL)) return;
         if (!ConfigEnforcer.ShouldBreakFall(player)) return;
 
