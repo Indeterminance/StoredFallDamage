@@ -1,11 +1,8 @@
 # Stored Fall Damage
 In Minecraft, sometimes mistakes happen. You might fall off a cliff, maybe misjudge a drop, or perhaps land perfectly on the edge of a block and miss your water bucket because of it! This is where Stored Fall Damage comes in: When you take a lethal fall you'll be saved at half a heart and all the damage that would've killed you is "stored" into your hearts themselves! To repair your hearts you can regen any way you'd like, but be careful! Until you do so you'll be locked at half a heart permanently!
 
-Of course, there are small drops, minor accidents...
-
-...or maybe you're taking a risk you shouldn't! But don't test your luck! Even this has limits...
-
-As long as you survive you can heal back up to full health, provided you have enough resources!
+Of course, there are small drops and minor accidents, or maybe you're taking a risk you shouldn't! But don't test your luck! Even this has limits...
+But as long as you survive you can heal back up to full health, provided you have enough resources!
 
 ### Configuration
 Of course, this mod has a few config options to make things a little easier (or harder?) if you so desire. They can be found in `config/storedfalldamage.toml`:
