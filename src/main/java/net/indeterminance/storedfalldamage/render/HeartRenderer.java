@@ -3,6 +3,7 @@ package net.indeterminance.storedfalldamage.render;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.indeterminance.storedfalldamage.StoredFallDamage;
 import net.indeterminance.storedfalldamage.client.FallBreakClientData;
+import net.indeterminance.storedfalldamage.compat.CompatManager;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -17,10 +18,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import org.joml.Vector2i;
+import oshi.util.tuples.Pair;
+
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HeartRenderer {
 
-    private static final ResourceLocation CRACKED_HEARTS_LOC = ResourceLocation.fromNamespaceAndPath(StoredFallDamage.MOD_ID, "textures/gui/cracked_hearts.png");
     private static final int CRACKED_HEARTS_VARIANTS = 6;
 
     public static Minecraft instance;
@@ -32,6 +38,7 @@ public class HeartRenderer {
     static {
         instance = Minecraft.getInstance();
         gui = (ForgeGui) instance.gui;
+
     }
 
     public static boolean shouldRenderHeartDisplay(RenderGuiOverlayEvent.Pre event) {
@@ -52,7 +59,6 @@ public class HeartRenderer {
     }
 
     public static void renderHealth(GuiGraphics graphics) {
-
         instance.getProfiler().push("health");
         RenderSystem.enableBlend();
 
@@ -83,9 +89,9 @@ public class HeartRenderer {
         instance.getProfiler().pop();
     }
 
-    public static void renderHearts(GuiGraphics pGuiGraphics, Player player, int x, int y, int height, float maxHealth, int currentHealth, int displayHealth, int currentAbsorption, boolean shouldRenderHighlight, boolean redHighlight) {
-        Gui.HeartType playerHeartType = Gui.HeartType.forPlayer(player);
-        int hardcoreOffset = player.level().getLevelData().isHardcore() ? 54 : 0;
+    public static void renderHearts(GuiGraphics graphics, Player player, int x, int y, int height, float maxHealth, int currentHealth, int displayHealth, int currentAbsorption, boolean shouldRenderHighlight, boolean redHighlight) {
+        CrackedHeartType heartToDisplay = CrackedHeartType.GetCorrectHeartForPlayer(player);
+        boolean isHardcore = player.level().getLevelData().isHardcore();
         int heartCount = Math.min(Mth.ceil((double)maxHealth / 2.0D),10);
         int absorbHeartCount = Mth.ceil((double)currentAbsorption / 2.0D);
         int halfHeartCount = heartCount * 2;
@@ -98,7 +104,7 @@ public class HeartRenderer {
         int regenLevel =  regenEffect == null ? 1 : regenEffect.getAmplifier() + 1;
 
         for(int thisHeartIndex = heartCount + absorbHeartCount - 1; thisHeartIndex >= 0; --thisHeartIndex) {
-            int textureYOffset = thisHeartIndex >= heartCount ? 0 : 9 * (int) Math.min(CRACKED_HEARTS_VARIANTS,Math.ceil(fallDamageToHeal / 20)) + hardcoreOffset;
+            int crackStage = thisHeartIndex >= heartCount ? 0 : (int) Math.min(CrackedHeartType.CRACK_STAGES - 1,Math.ceil(fallDamageToHeal / 20));
             fallDamageToHeal -= 2;
 
             boolean thisHeartShake = (gui.tickCount / heartCount) % (10 / regenLevel) == thisHeartIndex % (heartCount / regenLevel);
@@ -114,45 +120,25 @@ public class HeartRenderer {
             if (thisHeartIndex == 0) thisHeartPosY += gui.random.nextInt(2);
 
             // Render bg container (ie. our cracked hearts)
-            renderCrackedHeart(pGuiGraphics, Gui.HeartType.CONTAINER, thisHeartPosX, thisHeartPosY, textureYOffset, shouldRenderHighlight, false, redHighlight);
+            CrackedHeartType.GetCorrectContainerForPlayer(player).RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, false, shouldRenderHighlight, redHighlight, false);
 
             if (thisHeartIndex >= heartCount) {
                 int absorbHalfHeartCount = thisHalfHeartCount - halfHeartCount;
                 if (absorbHalfHeartCount < currentAbsorption) {
                     boolean isHalfAbsorbHeart = absorbHalfHeartCount + 1 == currentAbsorption;
-                    Gui.HeartType absorbFlavor = playerHeartType == Gui.HeartType.WITHERED ? playerHeartType : Gui.HeartType.ABSORBING;
-                    renderCrackedHeart(pGuiGraphics, absorbFlavor, thisHeartPosX, thisHeartPosY, textureYOffset, false, isHalfAbsorbHeart, false);
+                    CrackedHeartType.GetAbsorbHeartForPlayer(player).RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfAbsorbHeart, false, false, isHardcore);
                 }
             }
 
             boolean isHalfHeart = thisHalfHeartCount + 1 == displayHealth;
             if (shouldRenderHighlight && thisHalfHeartCount < displayHealth) {
-                renderCrackedHeart(pGuiGraphics, playerHeartType, thisHeartPosX, thisHeartPosY, textureYOffset, true, isHalfHeart, false);
+                heartToDisplay.RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfHeart, shouldRenderHighlight, redHighlight, isHardcore);
             }
 
             if (thisHalfHeartCount < currentHealth) {
-                renderCrackedHeart(pGuiGraphics, playerHeartType, thisHeartPosX, thisHeartPosY, textureYOffset, false, isHalfHeart, false);
+                heartToDisplay.RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfHeart, shouldRenderHighlight, redHighlight, isHardcore);
             }
         }
-    }
-
-    private static void renderCrackedHeart(GuiGraphics graphics, Gui.HeartType heartType, int x, int y, int yOffset, boolean shouldRenderHighlight, boolean isHalfHeart, boolean redHighlight) {
-        graphics.blit(CRACKED_HEARTS_LOC, x, y, GetHeartXFromSheet(heartType, isHalfHeart, shouldRenderHighlight, redHighlight), yOffset, 9, 9);
-    }
-
-    public static int GetHeartXFromSheet(Gui.HeartType heartType, boolean isHalfHeart, boolean shouldRenderHighlight, boolean redHighlight) {
-        int i;
-        if (heartType == Gui.HeartType.CONTAINER) {
-            //StoredFallDamage.LOGGER.debug("{}", redHighlight);
-            int j = redHighlight ? 2 : 1;
-            i = j * (shouldRenderHighlight ? 1 : 0);
-        } else {
-            int j = isHalfHeart ? 1 : 0;
-            int k = heartType.canBlink && shouldRenderHighlight ? 2 : 0;
-            i = j + k;
-        }
-
-        return (heartType.index * 2 + i) * 9;
     }
 
     public static void ProcessFlashing(Player player, int health) {

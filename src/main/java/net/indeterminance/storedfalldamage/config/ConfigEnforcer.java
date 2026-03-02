@@ -1,14 +1,17 @@
 package net.indeterminance.storedfalldamage.config;
 
+import net.indeterminance.storedfalldamage.StoredFallDamage;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 
 public final class ConfigEnforcer {
-    public static final TagKey<Item> clutch_items = ItemTags.create(ResourceLocation.fromNamespaceAndPath("storedfalldamage","clutch_items"));
-
+    public static final TagKey<Item> clutch_items = ItemTags.create(ResourceLocation.fromNamespaceAndPath(StoredFallDamage.MOD_ID,"clutch_items"));
+    public static final TagKey<DamageType> STORED_DAMAGE_TYPES = TagKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(StoredFallDamage.MOD_ID, "stored_damage_types"));
 
     public static boolean IsHoldingClutchItem(Player player) {
         return player.getMainHandItem().is(clutch_items) || player.getOffhandItem().is(clutch_items);

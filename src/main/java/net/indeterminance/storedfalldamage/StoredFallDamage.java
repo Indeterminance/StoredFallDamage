@@ -1,12 +1,11 @@
 package net.indeterminance.storedfalldamage;
 
 import com.mojang.logging.LogUtils;
+import net.indeterminance.storedfalldamage.compat.CompatManager;
 import net.indeterminance.storedfalldamage.config.StoredDamageConfig;
 import net.indeterminance.storedfalldamage.networking.PacketHandler;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -33,7 +32,8 @@ public class StoredFallDamage
         context.registerConfig(ModConfig.Type.COMMON, StoredDamageConfig.CONFIG, "storedfalldamage.toml");
 
         MinecraftForge.EVENT_BUS.register(this);
-        //context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+
+        CompatManager.LoadCompatFeatures();
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

@@ -9,7 +9,6 @@ import net.indeterminance.storedfalldamage.networking.PacketHandler;
 import net.indeterminance.storedfalldamage.networking.packet.FallBreakPacketS2C;
 import net.indeterminance.storedfalldamage.render.HeartRenderer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.common.util.LazyOptional;
@@ -34,7 +33,7 @@ public class ModEvents {
      */
     @SubscribeEvent
     public static void onLivingDamage(LivingDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player) || !event.getSource().is(DamageTypes.FALL)) return;
+        if (!(event.getEntity() instanceof Player player) || !event.getSource().is(ConfigEnforcer.STORED_DAMAGE_TYPES)) return;
         if (!ConfigEnforcer.ShouldBreakFall(player)) return;
 
         float damage = event.getAmount();
