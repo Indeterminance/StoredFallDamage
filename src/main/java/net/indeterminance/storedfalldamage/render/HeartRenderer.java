@@ -71,13 +71,13 @@ public class HeartRenderer {
         gui.leftHeight += (healthRows * rowHeight);
         if (rowHeight != 10) gui.leftHeight += 10 - rowHeight;
 
-        renderHearts(graphics, player, left, top, rowHeight, healthMax, health, gui.displayHealth, absorb, highlight, fallFlashing);
+        renderHearts(graphics, player, left, top, rowHeight, healthMax, health, gui.displayHealth, absorb, highlight);
 
         RenderSystem.disableBlend();
         instance.getProfiler().pop();
     }
 
-    public static void renderHearts(GuiGraphics graphics, Player player, int x, int y, int height, float maxHealth, int currentHealth, int displayHealth, int currentAbsorption, boolean shouldRenderHighlight, boolean redHighlight) {
+    public static void renderHearts(GuiGraphics graphics, Player player, int x, int y, int height, float maxHealth, int currentHealth, int displayHealth, int currentAbsorption, boolean shouldRenderHighlight) {
         CrackedHeartType heartToDisplay = CrackedHeartType.GetCorrectHeartForPlayer(player);
         boolean isHardcore = player.level().getLevelData().isHardcore();
         int heartCount = Math.min(Mth.ceil((double)maxHealth / 2.0D), 10);
@@ -92,7 +92,8 @@ public class HeartRenderer {
         int regenLevel =  regenEffect == null ? 1 : regenEffect.getAmplifier() + 1;
 
 
-        int startingHeart = (heartCount + absorbHeartCount - 1) % 10;
+        int startingHeartX = (heartCount + absorbHeartCount - 1) % 10;
+        int startingHeartY = (heartCount + absorbHeartCount - 1) / 10;
         for(int thisHeartIndex = heartCount + absorbHeartCount - 1; thisHeartIndex >= 0; --thisHeartIndex) {
             int crackStage = thisHeartIndex >= heartCount ? 0 : (int) Math.min(CrackedHeartType.CRACK_STAGES - 1,Math.ceil(fallDamageToHeal / 20));
             fallDamageToHeal -= 2;
@@ -104,30 +105,30 @@ public class HeartRenderer {
             int thisHeartRowPosition = thisHeartIndex % 10;
             int thisHeartPosX = x + thisHeartRowPosition * 8;
             int thisHeartPosY = y - thisHeartRowIndex * height - (isShake ? 1 : 0);
-            int thisShieldPosY = thisHeartPosY;
+            int thisShieldPosY = y - thisHeartRowIndex * height;
             int thisHalfHeartCount = thisHeartIndex * 2;
 
             // Leftmost heart
             if (thisHeartIndex == 0) thisHeartPosY += gui.random.nextInt(2);
 
             // Render bg container (ie. our cracked hearts)
-            CrackedHeartType.GetCorrectContainerForPlayer(player).RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, false, shouldRenderHighlight, redHighlight, false);
+            CrackedHeartType.GetCorrectContainerForPlayer(player).RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, false, shouldRenderHighlight, false);
 
             if (thisHeartIndex >= heartCount) {
                 int absorbHalfHeartCount = thisHalfHeartCount - halfHeartCount;
                 if (absorbHalfHeartCount < currentAbsorption) {
                     boolean isHalfAbsorbHeart = absorbHalfHeartCount + 1 == currentAbsorption;
-                    CrackedHeartType.GetAbsorbHeartForPlayer(player).RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfAbsorbHeart, false, false, isHardcore);
+                    CrackedHeartType.GetAbsorbHeartForPlayer(player).RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfAbsorbHeart, false, isHardcore);
                 }
             }
 
             boolean isHalfHeart = thisHalfHeartCount + 1 == displayHealth;
             if (shouldRenderHighlight && thisHalfHeartCount < displayHealth) {
-                heartToDisplay.RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfHeart, shouldRenderHighlight, redHighlight, isHardcore);
+                heartToDisplay.RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfHeart, shouldRenderHighlight, isHardcore);
             }
 
             if (thisHalfHeartCount < currentHealth) {
-                heartToDisplay.RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfHeart, shouldRenderHighlight, redHighlight, isHardcore);
+                heartToDisplay.RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfHeart, shouldRenderHighlight, isHardcore);
             }
 
             MobEffectInstance storingShieldEffect = player.getEffect(ModEffects.STORING_SHIELD.get());
@@ -140,7 +141,7 @@ public class HeartRenderer {
                     shieldXOffset = 3;
                     mode = CrackedHeartType.StoringShieldSprite.LEFT;
                 }
-                else if (thisHeartIndex == startingHeart) {
+                else if ((thisHeartIndex % 10 == startingHeartX && thisHeartRowIndex == startingHeartY) || thisHeartRowPosition == 9) {
                     mode = CrackedHeartType.StoringShieldSprite.RIGHT;
                 }
                 heartToDisplay.RenderStoringShield(graphics, thisHeartPosX - shieldXOffset, thisShieldPosY - 3, mode);

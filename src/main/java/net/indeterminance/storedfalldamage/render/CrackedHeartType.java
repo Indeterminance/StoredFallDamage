@@ -72,7 +72,7 @@ public class CrackedHeartType {
         return finalPos;
     }
 
-    public void RenderHeart(GuiGraphics graphics, int screenX, int screenY, int stage, boolean isHalfHeart, boolean renderHighlight, boolean redHighlight, boolean isHardcore) {
+    public void RenderHeart(GuiGraphics graphics, int screenX, int screenY, int stage, boolean isHalfHeart, boolean renderHighlight, boolean isHardcore) {
         Vector2i sheetPos = CalculateFinalPosition(isHalfHeart, renderHighlight, isHardcore);
         graphics.blit(location, screenX, screenY, sheetPos.x, sheetPos.y + stage * 9, 9, 9);
     }

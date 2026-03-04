@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class FallBreak {
     private float storedFallDamage = 0f;
     private static final float MIN_DAMAGE = 0f;
-    private static String reason;
+    private static String reason = "";
 
     public float getStoredFallDamage() {
         return storedFallDamage;
@@ -29,7 +29,7 @@ public class FallBreak {
     }
 
     public void clearReason() {
-        reason = null;
+        reason = "";
     }
 
     public void storeDamage(float amount) {

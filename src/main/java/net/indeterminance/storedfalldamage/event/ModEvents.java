@@ -95,18 +95,29 @@ public class ModEvents {
         if (!(event.getEntity() instanceof Player player)) return;
         LazyOptional<FallBreak> cap = player.getCapability(FallBreakProvider.fallBreakCapability);
         cap.ifPresent(fallBreak -> {
-            if (fallBreak.getStoredFallDamage() == 0) return;
+            if (fallBreak.getStoredFallDamage() == 0) {
+                    StabilizeHearts(player, fallBreak);
+                    return;
+            }
             float healAmount = fallBreak.healStoredFallDamage(event.getAmount());
             event.setAmount(healAmount);
             PacketHandler.sendToClient(new FallBreakPacketS2C(fallBreak.getStoredFallDamage()), (ServerPlayer)player);
             if (healAmount > 0) {
-                if (player.hasEffect(ModEffects.UNSTABLE_HEARTS.get())) {
-                    // Take away the Unstable Heart countdown since we managed to recover
-                    player.removeEffect(ModEffects.UNSTABLE_HEARTS.get());
-                }
-                fallBreak.clearReason();
+                StabilizeHearts(player, fallBreak);
             }
         });
+    }
+
+    public static void StabilizeHearts(Player player, FallBreak fallBreak) {
+        if (player.hasEffect(ModEffects.UNSTABLE_HEARTS.get())) {
+            // Take away the Unstable Heart countdown since we managed to recover
+            player.removeEffect(ModEffects.UNSTABLE_HEARTS.get());
+        }
+        if (player.hasEffect(ModEffects.STORING_SHIELD.get())) {
+            // Take away the Unstable Heart countdown since we managed to recover
+            player.removeEffect(ModEffects.STORING_SHIELD.get());
+        }
+        fallBreak.clearReason();
     }
 
     // Get this before any other modded event, so that we can stop them rendering special
