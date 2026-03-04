@@ -1,0 +1,6 @@
+{
+  "effect.storedfalldamage.storing_shield": "Storing Shield",
+  "effect.storedfalldamage.unstable_hearts": "Unstable Hearts",
+
+  "death.attack.unstable_hearts_timeout": "%s couldn't pick up the pieces"
+}

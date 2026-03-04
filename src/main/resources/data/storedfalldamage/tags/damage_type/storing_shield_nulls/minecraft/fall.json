@@ -1,0 +1,12 @@
+{
+  "values": [
+    "minecraft:hot_floor",
+    "minecraft:magic",
+    "minecraft:on_fire",
+    "minecraft:wither",
+    {
+      "id": "witherstormmod:wither_sickness",
+      "required": false
+    }
+  ]
+}

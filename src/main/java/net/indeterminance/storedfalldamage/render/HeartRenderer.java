@@ -1,14 +1,11 @@
 package net.indeterminance.storedfalldamage.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.indeterminance.storedfalldamage.StoredFallDamage;
 import net.indeterminance.storedfalldamage.client.FallBreakClientData;
-import net.indeterminance.storedfalldamage.compat.CompatManager;
+import net.indeterminance.storedfalldamage.registries.ModEffects;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -18,17 +15,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import org.joml.Vector2i;
-import oshi.util.tuples.Pair;
-
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Map;
 
 public class HeartRenderer {
-
-    private static final int CRACKED_HEARTS_VARIANTS = 6;
-
     public static Minecraft instance;
     public static ForgeGui gui;
     public static boolean fallFlashing = false;
@@ -72,8 +60,8 @@ public class HeartRenderer {
         float healthMax = Math.max((float) attrMaxHealth.getValue(), Math.max(gui.displayHealth, health));
         int absorb = Mth.ceil(player.getAbsorptionAmount());
 
-        int healthRows = Mth.ceil((healthMax + absorb) / 2.0F / 10.0F);
-        int rowHeight = Math.max(10 - (healthRows - 2), 3);
+        int healthRows = Mth.ceil((healthMax + absorb) / 20.0F);
+        int rowHeight = Math.max(12 - healthRows, 3);
 
         gui.random.setSeed(gui.tickCount * 312871L);
 
@@ -92,7 +80,7 @@ public class HeartRenderer {
     public static void renderHearts(GuiGraphics graphics, Player player, int x, int y, int height, float maxHealth, int currentHealth, int displayHealth, int currentAbsorption, boolean shouldRenderHighlight, boolean redHighlight) {
         CrackedHeartType heartToDisplay = CrackedHeartType.GetCorrectHeartForPlayer(player);
         boolean isHardcore = player.level().getLevelData().isHardcore();
-        int heartCount = Math.min(Mth.ceil((double)maxHealth / 2.0D),10);
+        int heartCount = Math.min(Mth.ceil((double)maxHealth / 2.0D), 10);
         int absorbHeartCount = Mth.ceil((double)currentAbsorption / 2.0D);
         int halfHeartCount = heartCount * 2;
 
@@ -103,6 +91,8 @@ public class HeartRenderer {
         boolean isRegenHeartRaised = gui.tickCount % 10 < 5 && regenEffect != null;
         int regenLevel =  regenEffect == null ? 1 : regenEffect.getAmplifier() + 1;
 
+
+        int startingHeart = (heartCount + absorbHeartCount - 1) % 10;
         for(int thisHeartIndex = heartCount + absorbHeartCount - 1; thisHeartIndex >= 0; --thisHeartIndex) {
             int crackStage = thisHeartIndex >= heartCount ? 0 : (int) Math.min(CrackedHeartType.CRACK_STAGES - 1,Math.ceil(fallDamageToHeal / 20));
             fallDamageToHeal -= 2;
@@ -114,9 +104,10 @@ public class HeartRenderer {
             int thisHeartRowPosition = thisHeartIndex % 10;
             int thisHeartPosX = x + thisHeartRowPosition * 8;
             int thisHeartPosY = y - thisHeartRowIndex * height - (isShake ? 1 : 0);
+            int thisShieldPosY = thisHeartPosY;
             int thisHalfHeartCount = thisHeartIndex * 2;
 
-            // Last heart
+            // Leftmost heart
             if (thisHeartIndex == 0) thisHeartPosY += gui.random.nextInt(2);
 
             // Render bg container (ie. our cracked hearts)
@@ -137,6 +128,22 @@ public class HeartRenderer {
 
             if (thisHalfHeartCount < currentHealth) {
                 heartToDisplay.RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfHeart, shouldRenderHighlight, redHighlight, isHardcore);
+            }
+
+            MobEffectInstance storingShieldEffect = player.getEffect(ModEffects.STORING_SHIELD.get());
+            if (storingShieldEffect != null) {
+                int duration = storingShieldEffect.getDuration();
+                if ((duration <= 100 && duration % 6 < 3)) continue;
+                CrackedHeartType.StoringShieldSprite mode = CrackedHeartType.StoringShieldSprite.MIDDLE;
+                int shieldXOffset = 0;
+                if (thisHeartRowPosition == 0) {
+                    shieldXOffset = 3;
+                    mode = CrackedHeartType.StoringShieldSprite.LEFT;
+                }
+                else if (thisHeartIndex == startingHeart) {
+                    mode = CrackedHeartType.StoringShieldSprite.RIGHT;
+                }
+                heartToDisplay.RenderStoringShield(graphics, thisHeartPosX - shieldXOffset, thisShieldPosY - 3, mode);
             }
         }
     }

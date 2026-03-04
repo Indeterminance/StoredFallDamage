@@ -1,6 +1,6 @@
 package net.indeterminance.storedfalldamage.render;
 
-import net.indeterminance.storedfalldamage.StoredFallDamage;
+import net.indeterminance.storedfalldamage.registries.ModResources;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
@@ -12,10 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class CrackedHeartType {
-    public static final ResourceLocation CRACKED_HEARTS_LOC = ResourceLocation.fromNamespaceAndPath(StoredFallDamage.MOD_ID, "textures/gui/cracked_hearts.png");
-    public static final ResourceLocation COMPAT_HEARTS_LOC = ResourceLocation.fromNamespaceAndPath(StoredFallDamage.MOD_ID, "textures/gui/cracked_hearts_compat.png");
+import static net.indeterminance.storedfalldamage.registries.ModResources.CRACKED_HEARTS_LOC;
 
+public class CrackedHeartType {
     public static final int CRACK_STAGES = 7;
     public static final Vector2i HARDCORE_OFFSET = new Vector2i(0, 9 * CRACK_STAGES);
     public static final Vector2i HALFHEART_OFFSET = new Vector2i(9, 0);
@@ -65,7 +64,7 @@ public class CrackedHeartType {
         return this.requirements.apply(player);
     }
 
-    public Vector2i CalculateFinalPosition(boolean isHalfHeart, boolean renderHighlight, boolean redHighlight, boolean isHardcore) {
+    public Vector2i CalculateFinalPosition(boolean isHalfHeart, boolean renderHighlight, boolean isHardcore) {
         Vector2i finalPos = new Vector2i(position);
         if (isHalfHeart) finalPos = finalPos.add(HALFHEART_OFFSET);
         if (isHardcore) finalPos = finalPos.add(HARDCORE_OFFSET);
@@ -74,8 +73,32 @@ public class CrackedHeartType {
     }
 
     public void RenderHeart(GuiGraphics graphics, int screenX, int screenY, int stage, boolean isHalfHeart, boolean renderHighlight, boolean redHighlight, boolean isHardcore) {
-        Vector2i sheetPos = CalculateFinalPosition(isHalfHeart, renderHighlight, redHighlight, isHardcore);
+        Vector2i sheetPos = CalculateFinalPosition(isHalfHeart, renderHighlight, isHardcore);
         graphics.blit(location, screenX, screenY, sheetPos.x, sheetPos.y + stage * 9, 9, 9);
+    }
+
+    public enum StoringShieldSprite {
+        LEFT,
+        MIDDLE,
+        RIGHT
+    }
+
+    public void RenderStoringShield(GuiGraphics graphics, int screenX, int screenY, StoringShieldSprite mode) {
+        int xPos;
+        int width;
+        if (mode == StoringShieldSprite.LEFT) {
+            xPos = 0;
+            width = 12;
+        }
+        else if (mode == StoringShieldSprite.RIGHT) {
+            xPos = 19;
+            width = 12;
+        }
+        else {
+            xPos = 11;
+            width = 9;
+        }
+        graphics.blit(ModResources.SHIELD_EFFECT_LOC, screenX, screenY, xPos, 0, width, 13);
     }
 
     public static CrackedHeartType GetCorrectHeartForPlayer(Player player) {

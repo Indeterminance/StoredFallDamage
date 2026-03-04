@@ -1,5 +1,6 @@
 {
   "values": [
-    "minecraft:fall"
+    "minecraft:fall",
+    "minecraft:explosion"
   ]
 }

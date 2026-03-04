@@ -3,6 +3,7 @@ package net.indeterminance.storedfalldamage;
 import com.mojang.logging.LogUtils;
 import net.indeterminance.storedfalldamage.compat.CompatManager;
 import net.indeterminance.storedfalldamage.config.StoredDamageConfig;
+import net.indeterminance.storedfalldamage.registries.ModEffects;
 import net.indeterminance.storedfalldamage.networking.PacketHandler;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -30,7 +31,7 @@ public class StoredFallDamage
         modEventBus.addListener(this::commonSetup);
 
         context.registerConfig(ModConfig.Type.COMMON, StoredDamageConfig.CONFIG, "storedfalldamage.toml");
-
+        ModEffects.register(modEventBus);
         MinecraftForge.EVENT_BUS.register(this);
 
         CompatManager.LoadCompatFeatures();

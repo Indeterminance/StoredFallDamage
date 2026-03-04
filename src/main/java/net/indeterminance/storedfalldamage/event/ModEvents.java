@@ -5,10 +5,14 @@ import net.indeterminance.storedfalldamage.capability.FallBreak;
 import net.indeterminance.storedfalldamage.capability.FallBreakProvider;
 import net.indeterminance.storedfalldamage.config.ConfigEnforcer;
 import net.indeterminance.storedfalldamage.config.StoredDamageConfig;
+import net.indeterminance.storedfalldamage.registries.ModEffects;
 import net.indeterminance.storedfalldamage.networking.PacketHandler;
 import net.indeterminance.storedfalldamage.networking.packet.FallBreakPacketS2C;
+import net.indeterminance.storedfalldamage.registries.ModTags;
 import net.indeterminance.storedfalldamage.render.HeartRenderer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.common.util.LazyOptional;
@@ -33,29 +37,52 @@ public class ModEvents {
      */
     @SubscribeEvent
     public static void onLivingDamage(LivingDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player) || !event.getSource().is(ConfigEnforcer.STORED_DAMAGE_TYPES)) return;
-        if (!ConfigEnforcer.ShouldBreakFall(player)) return;
-
-        float damage = event.getAmount();
-        float currentHealth = event.getEntity().getHealth();
-        float currentAbsorption = event.getEntity().getAbsorptionAmount();
-        float toStoreBase = (damage - currentHealth - currentAbsorption + 1);
-        float scaling = StoredDamageConfig.STORED_SCALING.get().floatValue();
-        if (ConfigEnforcer.DoesFallExceedStoreable(toStoreBase)) return;
-        if (currentHealth + currentAbsorption - 1 >= damage) return;
-
+        if (!(event.getEntity() instanceof Player player)) return;
+        DamageSource source = event.getSource();
         LazyOptional<FallBreak> cap = player.getCapability(FallBreakProvider.fallBreakCapability);
         cap.ifPresent(fallBreak -> {
-            if (fallBreak.getStoredFallDamage() > 0) {
+            boolean storedDamageType = source.is(ModTags.STORED_DAMAGE_TYPES) && ConfigEnforcer.ShouldSavePlayer(player, source);
+            boolean isStoringShield = player.hasEffect(ModEffects.STORING_SHIELD.get()) && ConfigEnforcer.IsStoreShieldedFromType(fallBreak.getReason(), source);
+            if (!storedDamageType && !isStoringShield) return;
+
+            float damage = event.getAmount();
+            float currentHealth = event.getEntity().getHealth();
+            float currentAbsorption = event.getEntity().getAbsorptionAmount();
+            float toStoreBase = (damage - currentHealth - currentAbsorption + 1);
+            float storeScaling = StoredDamageConfig.STORED_SCALING.get().floatValue();
+            float shieldScaling = StoredDamageConfig.SHIELD_SCALING.get().floatValue();
+            float scaling = isStoringShield & !storedDamageType ? shieldScaling : storeScaling;
+            if (ConfigEnforcer.DoesDamageExceedStoreable(toStoreBase * scaling)) return;
+            if (currentHealth + currentAbsorption - 1 >= damage) return;
+
+            if (fallBreak.getStoredFallDamage() > 0 && !isStoringShield) {
+                // Player took non-shielded damage whilst having damage stored (instant death)
                 event.setAmount(Float.MAX_VALUE);
                 PacketHandler.sendToClient(new FallBreakPacketS2C(fallBreak.getStoredFallDamage()), (ServerPlayer)player);
             }
-            else {
+            else if (storedDamageType && !isStoringShield) {
+                // Player is storing damage
                 event.setAmount(currentHealth + currentAbsorption - 1);
-                event.getEntity().setAbsorptionAmount(0);
-                fallBreak.setStoredFallDamage(toStoreBase * scaling);
-                PacketHandler.sendToClient(new FallBreakPacketS2C(fallBreak.getStoredFallDamage()), (ServerPlayer)player);
 
+                fallBreak.storeReason(source);
+                fallBreak.beginStoreDamage(toStoreBase * storeScaling);
+                PacketHandler.sendToClient(new FallBreakPacketS2C(fallBreak.getStoredFallDamage()), (ServerPlayer)player);
+                if (StoredDamageConfig.STORING_SHIELD_ENABLED.get()) {
+                    // Give the player Storing Shield if we've enabled that
+                    player.addEffect(new MobEffectInstance(ModEffects.STORING_SHIELD.get(), StoredDamageConfig.SHIELD_DURATION.get()));
+                }
+                if (StoredDamageConfig.UNSTABLE_HEARTS_ENABLED.get()) {
+                    // Give the player Unstable Hearts if we've enabled that
+                    int duration = StoredDamageConfig.UnstableHeartsDuration((int) (toStoreBase * shieldScaling));
+                    player.addEffect(new MobEffectInstance(ModEffects.UNSTABLE_HEARTS.get(), duration));
+                }
+            }
+            else {
+                // Player is protected via Storing Shield
+                event.setAmount(0);
+                event.getEntity().setAbsorptionAmount(0);
+                fallBreak.storeDamage(toStoreBase * shieldScaling);
+                PacketHandler.sendToClient(new FallBreakPacketS2C(fallBreak.getStoredFallDamage()), (ServerPlayer)player);
             }
         });
     }
@@ -72,6 +99,13 @@ public class ModEvents {
             float healAmount = fallBreak.healStoredFallDamage(event.getAmount());
             event.setAmount(healAmount);
             PacketHandler.sendToClient(new FallBreakPacketS2C(fallBreak.getStoredFallDamage()), (ServerPlayer)player);
+            if (healAmount > 0) {
+                if (player.hasEffect(ModEffects.UNSTABLE_HEARTS.get())) {
+                    // Take away the Unstable Heart countdown since we managed to recover
+                    player.removeEffect(ModEffects.UNSTABLE_HEARTS.get());
+                }
+                fallBreak.clearReason();
+            }
         });
     }
 
