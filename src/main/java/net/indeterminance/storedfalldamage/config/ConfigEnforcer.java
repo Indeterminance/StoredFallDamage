@@ -30,6 +30,7 @@ public final class ConfigEnforcer {
     }
 
     public static boolean IsStoreShieldedFromType(String breakReason, DamageSource source) {
+        if (breakReason.isEmpty()) return false;
         TagKey<DamageType> tag = ModResources.LoadShieldedDamageTypes(breakReason);
         return source.is(tag);
 

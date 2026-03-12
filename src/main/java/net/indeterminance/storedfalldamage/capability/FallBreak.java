@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class FallBreak {
     private float storedFallDamage = 0f;
     private static final float MIN_DAMAGE = 0f;
-    private static String reason = "";
+    private String reason = "";
 
     public float getStoredFallDamage() {
         return storedFallDamage;
@@ -23,9 +23,13 @@ public class FallBreak {
 
     public void storeReason(DamageSource source) {
         Optional<ResourceKey<DamageType>> damageOptional =  source.typeHolder().unwrap().left();
-        AtomicReference<String> result = new AtomicReference<String>();
+        AtomicReference<String> result = new AtomicReference<String>("");
         damageOptional.ifPresent(key -> result.set(key.location().toString()));
         reason = result.get();
+
+        // Safety just in case the damage optional is present but somehow no string is set?
+        // There was a crash here at some point so we do this just in case
+        if (reason == null) clearReason();
     }
 
     public void clearReason() {
