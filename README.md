@@ -34,7 +34,7 @@ data/
         │   │   └── <namespace>/
         │   │       └── <damage_type>.json
         │   └── stored_damage_types.json
-        └── items/
+        └── item/
             └── storing_items/
                 └── <namespace>/
                     └── <damage_type>.json
