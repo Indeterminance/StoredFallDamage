@@ -1,0 +1,14 @@
+{
+  "heart_crack": {
+    "sounds": [
+      "storedfalldamage:heart_crack"
+    ],
+    "subtitle": "storedfalldamage:heart_crack"
+  },
+  "shield_hit": {
+    "sounds": [
+      "storedfalldamage:shield_hit"
+    ],
+    "subtitle": "storedfalldamage:shield_hit"
+  }
+}

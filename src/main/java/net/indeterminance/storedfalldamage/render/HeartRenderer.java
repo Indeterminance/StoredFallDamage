@@ -1,80 +1,79 @@
 package net.indeterminance.storedfalldamage.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.indeterminance.storedfalldamage.client.FallBreakClientData;
+import net.indeterminance.storedfalldamage.networking.FallBreakClientData;
 import net.indeterminance.storedfalldamage.registries.ModEffects;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 public class HeartRenderer {
-    public static Minecraft instance;
-    public static ForgeGui gui;
     public static boolean fallFlashing = false;
 
     public static float lastStoredDamage = 0;
+    private static Gui gui = Minecraft.getInstance().gui;
+    private static Minecraft instance = Minecraft.getInstance();
 
-    static {
-        instance = Minecraft.getInstance();
-        gui = (ForgeGui) instance.gui;
+    public static List<Function<Integer, Integer>> offsetXFunctions = new ArrayList<>();
+    public static List<Function<Integer, Integer>> offsetYFunctions = new ArrayList<>();
 
-    }
-
-    public static boolean shouldRenderHeartDisplay(RenderGuiOverlayEvent.Pre event) {
-        boolean earlyFail = event.isCanceled() || event.getOverlay() != VanillaGuiOverlay.PLAYER_HEALTH.type();
-        boolean noStoredDamage = FallBreakClientData.clientStoredFallDamage == 0;
-        boolean badGui = (gui == null) || instance.options.hideGui || !gui.shouldDrawSurvivalElements();
+    public static boolean shouldRenderHeartDisplay(RenderGuiLayerEvent.Pre event) {
+        boolean cancelledEvent = event.isCanceled();
+        boolean noStoredDamage = FallBreakClientData.getPlayerStoredDamage(instance.player) == 0;
+        boolean badGui = instance.options.hideGui;
         boolean notPlayer = !(instance.getCameraEntity() instanceof Player);
-        return !(earlyFail || noStoredDamage || badGui || notPlayer);
+        return !(cancelledEvent || noStoredDamage || badGui || notPlayer);
     }
 
-    public static boolean renderHeartDisplay(RenderGuiOverlayEvent.Pre event) {
+    public static boolean renderHeartDisplay(RenderGuiLayerEvent.Pre event) {
+        if (instance == null) instance = Minecraft.getInstance();
+        if (gui == null) gui = instance.gui;
+
         if (!shouldRenderHeartDisplay(event)) return false;
 
-        gui.setupOverlayRenderState(true, false);
+        //gui.setupOverlayRenderState(true, false);
         renderHealth(event.getGuiGraphics());
 
         return true;
     }
 
-    public static void renderHealth(GuiGraphics graphics) {
-        instance.getProfiler().push("health");
-        RenderSystem.enableBlend();
+    public static void renderHealth(GuiGraphics guiGraphics) {
+        Player player = instance.player;
+        if (player != null) {
+            int currentHealth = Mth.ceil(player.getHealth());
+            boolean shouldRenderHighlight = gui.healthBlinkTime > (long) gui.tickCount && (gui.healthBlinkTime - (long) gui.tickCount) / 3L % 2L == 1L;
 
-        Player player = (Player) instance.getCameraEntity();
-        int health = Mth.ceil(player.getHealth());
-        boolean highlight = gui.healthBlinkTime > (long) gui.tickCount && (gui.healthBlinkTime - (long) gui.tickCount) / 3L % 2L == 1L;
+            ProcessFlashing(player, currentHealth);
 
-        ProcessFlashing(player, health);
-
-        AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
-        float healthMax = Math.max((float) attrMaxHealth.getValue(), Math.max(gui.displayHealth, health));
-        int absorb = Mth.ceil(player.getAbsorptionAmount());
-
-        int healthRows = Mth.ceil((healthMax + absorb) / 20.0F);
-        int rowHeight = Math.max(12 - healthRows, 3);
-
-        gui.random.setSeed(gui.tickCount * 312871L);
-
-        int left = gui.screenWidth / 2 - 91;
-        int top = gui.screenHeight - gui.leftHeight;
-
-        gui.leftHeight += (healthRows * rowHeight);
-        if (rowHeight != 10) gui.leftHeight += 10 - rowHeight;
-
-        renderHearts(graphics, player, left, top, rowHeight, healthMax, health, gui.displayHealth, absorb, highlight);
-
-        RenderSystem.disableBlend();
-        instance.getProfiler().pop();
+            int displayHealth = gui.displayHealth;
+            gui.random.setSeed(gui.tickCount * 312871L);
+            int x = guiGraphics.guiWidth() / 2 - 91;
+            int y = guiGraphics.guiHeight() - gui.leftHeight;for (Function<Integer, Integer> modifier : offsetXFunctions) {
+                x = modifier.apply(x);
+            }
+            for (Function<Integer, Integer> modifier : offsetYFunctions) {
+                y = modifier.apply(y);
+            }
+            float maxHealth = Math.max((float) player.getAttributeValue(Attributes.MAX_HEALTH), (float) Math.max(displayHealth, currentHealth));
+            int currentAbsorption = Mth.ceil(player.getAbsorptionAmount());
+            int l1 = Mth.ceil((maxHealth + (float) currentAbsorption) / 2.0F / 10.0F);
+            int height = Math.max(10 - (l1 - 2), 3);
+            gui.leftHeight += (l1 - 1) * height + 10;
+            instance.getProfiler().push("health");
+            renderHearts(guiGraphics, player, x, y, height, maxHealth, currentHealth, displayHealth, currentAbsorption, shouldRenderHighlight);
+            instance.getProfiler().pop();
+        }
     }
 
     public static void renderHearts(GuiGraphics graphics, Player player, int x, int y, int height, float maxHealth, int currentHealth, int displayHealth, int currentAbsorption, boolean shouldRenderHighlight) {
@@ -84,7 +83,7 @@ public class HeartRenderer {
         int absorbHeartCount = Mth.ceil((double)currentAbsorption / 2.0D);
         int halfHeartCount = heartCount * 2;
 
-        float fallDamageToHeal = FallBreakClientData.clientStoredFallDamage + currentAbsorption;
+        float fallDamageToHeal = FallBreakClientData.getPlayerStoredDamage((LocalPlayer)player) + currentAbsorption;
 
         // Setup values for regen shake
         MobEffectInstance regenEffect = player.getEffect(MobEffects.REGENERATION);
@@ -131,7 +130,7 @@ public class HeartRenderer {
                 heartToDisplay.RenderHeart(graphics, thisHeartPosX, thisHeartPosY, crackStage, isHalfHeart, shouldRenderHighlight, isHardcore);
             }
 
-            MobEffectInstance storingShieldEffect = player.getEffect(ModEffects.STORING_SHIELD.get());
+            MobEffectInstance storingShieldEffect = player.getEffect(ModEffects.STORING_SHIELD);
             if (storingShieldEffect != null) {
                 int duration = storingShieldEffect.getDuration();
                 if ((duration <= 100 && duration % 6 < 3)) continue;
@@ -150,6 +149,7 @@ public class HeartRenderer {
     }
 
     public static void ProcessFlashing(Player player, int health) {
+        float storedDamage = FallBreakClientData.getPlayerStoredDamage((LocalPlayer)player);
         if (health < gui.lastHealth && player.invulnerableTime > 0)
         {
             gui.lastHealthTime = Util.getMillis();
@@ -160,13 +160,13 @@ public class HeartRenderer {
             gui.lastHealthTime = Util.getMillis();
             gui.healthBlinkTime = gui.tickCount + 10L;
         }
-        else if (FallBreakClientData.clientStoredFallDamage < lastStoredDamage)
+        else if (storedDamage < lastStoredDamage)
         {
             gui.lastHealthTime = Util.getMillis();
             gui.healthBlinkTime = gui.tickCount + 10L;
             fallFlashing = true;
         }
-        else if (FallBreakClientData.clientStoredFallDamage == 0) {
+        else if (storedDamage == 0) {
             fallFlashing = false;
         }
 
@@ -179,6 +179,6 @@ public class HeartRenderer {
         }
 
         gui.lastHealth = health;
-        lastStoredDamage = FallBreakClientData.clientStoredFallDamage;
+        lastStoredDamage = storedDamage;
     }
 }

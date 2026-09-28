@@ -33,6 +33,6 @@ public final class ConfigEnforcer {
         if (breakReason.isEmpty()) return false;
         TagKey<DamageType> tag = ModResources.LoadShieldedDamageTypes(breakReason);
         return source.is(tag);
-
     }
+
 }

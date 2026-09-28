@@ -1,22 +1,23 @@
 package net.indeterminance.storedfalldamage.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.fml.config.IConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class StoredDamageConfig {
-    public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static ForgeConfigSpec CONFIG;
+    public static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static IConfigSpec CONFIG;
 
-    public static final ForgeConfigSpec.ConfigValue<ENABLE_FALLBREAK_VALUES> ENABLE_FALLBREAK;
-    public static final ForgeConfigSpec.ConfigValue<Double> STORED_SCALING;
-    public static final ForgeConfigSpec.ConfigValue<Double> STORED_LIMIT;
+    public static final ModConfigSpec.ConfigValue<ENABLE_FALLBREAK_VALUES> ENABLE_FALLBREAK;
+    public static final ModConfigSpec.ConfigValue<Double> STORED_SCALING;
+    public static final ModConfigSpec.ConfigValue<Double> STORED_LIMIT;
 
-    public static final ForgeConfigSpec.ConfigValue<Boolean> STORING_SHIELD_ENABLED;
-    public static final ForgeConfigSpec.ConfigValue<Integer> SHIELD_DURATION;
-    public static final ForgeConfigSpec.ConfigValue<Double> SHIELD_SCALING;
+    public static final ModConfigSpec.ConfigValue<Boolean> STORING_SHIELD_ENABLED;
+    public static final ModConfigSpec.ConfigValue<Integer> SHIELD_DURATION;
+    public static final ModConfigSpec.ConfigValue<Double> SHIELD_SCALING;
 
-    public static final ForgeConfigSpec.ConfigValue<Boolean> UNSTABLE_HEARTS_ENABLED;
-    public static final ForgeConfigSpec.ConfigValue<Integer> UNSTABLE_HEARTS_BASE;
-    public static final ForgeConfigSpec.ConfigValue<Integer> UNSTABLE_HEARTS_MULT;
+    public static final ModConfigSpec.ConfigValue<Boolean> UNSTABLE_HEARTS_ENABLED;
+    public static final ModConfigSpec.ConfigValue<Integer> UNSTABLE_HEARTS_BASE;
+    public static final ModConfigSpec.ConfigValue<Integer> UNSTABLE_HEARTS_MULT;
 
     public enum ENABLE_FALLBREAK_VALUES {
         NEVER,
